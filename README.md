@@ -26,6 +26,13 @@ to u.
       command liles -> git push -u origin urname/branchName 
    then comment the name of the branch on the issue post      
 
+
+TO DO LIST:
+
+1- KEYBASE
+2- PROJECT JEE
+3- CONCEPTION (CLASS DIAGRAM)
+
      
      
 
