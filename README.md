@@ -61,5 +61,7 @@ THE SKELETON:
 		index.js
 	db/
 		connection.js
-
+	crypto/
+		index.js
+		
 -we'll use the XMLHttpRequest ()  in order to send requests from the front-end to the REST API.
