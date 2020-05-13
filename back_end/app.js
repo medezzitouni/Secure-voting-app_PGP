@@ -5,8 +5,9 @@ const multer = require('multer')
 
 const app = express()
 
+app.use(bodyPaser.json())
 app.get('/api/vote', (req, res) =>{
-   res.send('goodbye mate')
+   res.send(req.body.title)
 })
 
 // middleware
