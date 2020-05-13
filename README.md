@@ -54,9 +54,9 @@ THE SKELETON:
 -backend/
 	Node.js REST API
 	public/
-		co.ejs
-		co.js // vue
-		de.ejs
+		co.html
+		co.html // vue
+		de.html
 		de.js // vue
 	app.js
 	server.js
