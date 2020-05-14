@@ -4,9 +4,25 @@ const {adminCtrls} = require('../controllers')
 const {isAutho} = require('../middlewares')
 const router = express.Router()
 
-router.post('/login', adminCtrls.login)
-.post('/voters', isAutho, adminCtrls.getAllVoters)
-.get('/votes', adminCtrls.getVotes)
+
+
+router
+// ! login and signup of the admins 
+.post('/login', adminCtrls.login)
 .post('/signup', adminCtrls.signup)
 
+
+// ! getAll and add a voter (employee) to the list
+// ! set the haveVoted props to true, it means the voter have voted
+.post('/createVoter', adminCtrls.createVoter) // ! create the men who can vote 
+.get('/voters', isAutho, adminCtrls.getVotersList)
+.put('/updateVoter', isAutho, adminCtrls.updateVoter)
+
+
+// ! getVotes for admin and add vote that are comming from the voter ( Front-end)
+.get('/votes', isAutho, adminCtrls.getVotes)
+.post('/addVote', adminCtrls.addVote)
+
+
+.get('/countedVotes', isAutho, adminCtrls.getCountedVotes)
 module.exports = router

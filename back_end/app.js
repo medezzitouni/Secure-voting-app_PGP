@@ -25,14 +25,8 @@ app.use((req, res, next) => {
 app.use('/admin',express.static(path.join(__dirname, 'public/admins')))
 .use(multer().none()) 
 .use('/admin/', router)
+.use('/vote', router)
 
 
-
-// app.post('/api/vote', (req, res) =>{
-//     let msg = "okay we got this " + req.body.username + " " + req.body.password
-//     res.json(msg)
-// })
-
-// 
 
 module.exports = app

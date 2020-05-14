@@ -21,10 +21,14 @@ Vue.component('login', {
       f.append('username', this.username)
       f.append('password', this.password)
       axios.post("/admin/login", f).then(res => {
-        console.log(res.data)
+        // console.log(res.data)
+        // console.log('header axios -> ' + res.data.id)
+        
         axios.defaults.headers.common["Authorization"] = "jwt " + res.data.token;
-        if(res.data.token)
-            Event.$emit("token", res.data)
+        axios.defaults.headers.common["AdminId"] = res.data.id;
+
+        if(res.data.token && res.data.id)
+            Event.$emit('authenticated', res.data)
 
       }).catch(err => console.log(err.msg))
     }
@@ -35,44 +39,60 @@ Vue.component('voters',
    {
     props : {
       voters: Array,
-      default: []
     },
     template: `
       <div>
-      
-      
+          <div>Voters List</div>
+          <div v-for="voter in voters">
+              <span style="width:50px" > {{ voter._id }} </span>
+              <span style="width:50px" > {{ voter.firstName }} </span>
+              <span style="width:50px" > {{ voter.lastName }} </span>
+              <span style="width:50px" > {{ voter.birthday }} </span>
+              <span style="width:50px" > {{ voter.voteNumber }} </span>
+              <span style="width:50px"> {{ voter.haveVoted }} </span>
+          </div>
       </div>
-    `
+    `,
+    created()
+    {
+      console.log("helllo")
+      console.table(this.votersList)
+    }
    }
 )
 
 var root = new Vue({
     el: '#root',
     data : {
-      tokenData : {},
-      authentified: false,
+      authenticated: false,
       voters : []
     },
     created() {
-      Event.$on("token", data => {
+      Event.$on('authenticated', data => {
         
-        this.tokenData = data
-        this.authentified = true
-        // this.getVoters()
+        this.authenticated = true
+        this.getVoters()
+
+        // this.tokenData = data
       })
       
     },
     methods:{
       getVoters(){
         // headers = { "Authorization" : "jwt " + this.token}
-        let f = new FormData()
-        f.append('adminId', this.tokenData.id)
-        axios.post('/admin/voters',f)
+        // let f = new FormData()
+        // f.append('adminId', this.tokenData.id)
+        
+        axios.get('/admin/voters')
         .then(res => {
-          console.log(res.data)
-          this.voters = res.data.voters
+          console.table(res.data)
+          this.voters = res.data
+          // console.table(this.voters)
+          
         })
-        .catch(err => console.log("Voter err -> " + err ))
+        .catch(err =>
+          // ! display u're not authorised
+          console.log("Voter err -> " + err ))
       }
     }
    
