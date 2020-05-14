@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-var cloudToken = 'mongodb+srv://info_security_project:147258@cluster0-hpwgx.mongodb.net/test?retryWrites=true&w=majority'
+var cloudToken = 'mongodb+srv://info_security_project:147258@cluster0-hpwgx.mongodb.net/voter_DB?retryWrites=true&w=majority'
 
 
 var connect = function(){

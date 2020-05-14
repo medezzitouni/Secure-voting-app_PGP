@@ -152,7 +152,7 @@ var updateVoter = (req, res, next) =>{
            voter.haveVoted = true
            VoterList.updateOne({_id:req.body.voterId},
             voter).then(() => res.status(201).json({
-                message: 'raaak nadddi'
+                voted: true
             }))
             .catch(err => res.status(400).json({
                 error : err

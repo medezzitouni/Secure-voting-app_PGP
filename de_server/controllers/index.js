@@ -154,7 +154,7 @@ var updateCountedVote = (req, res, next) =>{
            vote.isValid = true
            CountedVote.updateOne({_id:req.body.voteId},
             vote).then(() => res.status(201).json({
-                message: 'raaak nadddi'
+                valid: true
             }))
             .catch(err => res.status(400).json({
                 error : err
