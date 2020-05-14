@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const {Admin, VoterList, Vote, CountedVote} = require('../models/')
+const {Admin, VoterList, Vote, CountedVote} = require('../models')
 
 // ? admins login
 var login = (req, res, next) =>{
