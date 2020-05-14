@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const {Admin, VoterList, Vote, CountedVote} = require('../models')
+const {Admin, VoterList, Vote} = require('../models')
 
 // ? admins login
 var login = (req, res, next) =>{
@@ -49,7 +49,6 @@ var signup = (req, res, next) =>{
         let admin = new Admin({
             username: req.body.username,
             password: hash,
-            adminType: "co"
         })
          console.log("this is the password ->" + req.body.password)
         admin.save()
@@ -69,13 +68,11 @@ var signup = (req, res, next) =>{
 
 var getVotes = (req, res, next) => {
 
-    let adminId = req.headers.adminid
     console.log('getAllVotes')
     // let data = {}
     Vote.find().then((data) => 
     {
-        //! here where we're gonna decrypt the vote based on the type of admin, if he is CO we'll decrypt just the ID, 
-       // ! if he is the DE we'ill decrypt the ID and the B  
+        //! here where we're gonna decrypt the vote, we'll decrypt just the ID
         res.status(200).json(data)
     })
     .catch(err => 
@@ -85,11 +82,11 @@ var getVotes = (req, res, next) => {
     // res.status(200).json(data)
 }
 
-// ! this is gonna serve the front-end
+// ! save a vote come from the voter
 var addVote = (req, res, next)  => {
     // const url = req.protocol + '://' + req.get('host')
     let { voteNumber, bulletin } = req.body
-
+console.log('addVote here')
       // ! get his ID form database using firstName and lastName 
       // ! create and stock the encrypted vote come from the voter to the de and co  
      // ! stock in the Vote.js
@@ -98,7 +95,7 @@ var addVote = (req, res, next)  => {
             bulletin : bulletin
         })
 
-     voter.save()
+     vote.save()
      .then(() => res.status(201).json({
      message: 'vote is saved successfuly'
      }))
@@ -106,47 +103,6 @@ var addVote = (req, res, next)  => {
         error : `prblm with saving data ${err} `
     }))
 
-}
-
-
-var getCountedVotes = (req, res, next) => {
-
-    console.log('getAllVotes')
-    // let data = {}
-    CountedVote.find().then((data) => 
-    {
-        // ! decrypt the Counted votes, be careful they are double encryped
-        res.status(200).json(data)
-    })
-    .catch(err => 
-        res.status(400).json({
-           error : err
-        }))
-    // res.status(200).json(data)
-}
-
-var addCountedVote = (req, res, next)  => {
-// const url = req.protocol + '://' + req.get('host')
-let data = req.body
-
-    // ! create vote for the de, 
-    // ! stock in the deVoteFromCo.js
-
-//     let voter = new voterList({
-//         firstName : data.firstName,
-//         lastName : data.lastName,
-//         birthday : data.birthday,
-//         voteNumber : 8,  // * u have to create a function that generate a unique vote number
-//         haveVoted : data.vote
-//     })
-
-//  voter.save()
-//  .then(() => res.status(201).json({
-//  message: 'voter is saved successfuly'
-//  }))
-//  .catch(err => res.status(400).json({
-//     error : `prblm with saving data ${err} `
-// }))
 }
 
 
@@ -207,6 +163,8 @@ var updateVoter = (req, res, next) =>{
         error : 'findOneError: ' + err
     }))
 }
+
+
 module.exports.adminCtrls = {
     login,
     signup,
@@ -218,9 +176,5 @@ module.exports.adminCtrls = {
     getVotes,
     addVote,
     
-    getCountedVotes,
-    addCountedVote
 
 }
-
-

@@ -14,15 +14,13 @@ router
 
 // ! getAll and add a voter (employee) to the list
 // ! set the haveVoted props to true, it means the voter have voted
-.post('/createVoter', adminCtrls.createVoter) // ! create the men who can vote 
+.post('/createVoter', adminCtrls.createVoter) // ! create the user who can vote 
 .get('/voters', isAutho, adminCtrls.getVotersList)
 .put('/updateVoter', isAutho, adminCtrls.updateVoter)
 
 
 // ! getVotes for admin and add vote that are comming from the voter ( Front-end)
 .get('/votes', isAutho, adminCtrls.getVotes)
-.post('/addVote', adminCtrls.addVote)
+.post('/addVote', isAutho, adminCtrls.addVote)
 
-
-.get('/countedVotes', isAutho, adminCtrls.getCountedVotes)
 module.exports = router
