@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col-md-5 mx-auto">
                 <div class="card card-body">
-                    <h3 class="text-center mb-4">Sign-up</h3>
+                    <h3 class="text-center mb-4">Entrez vos informations</h3>
                     <form>
                        <div v-if="!nom" class="alert alert-danger">
                            <a class="close font-weight-light" data-dismiss="alert" href="#">×</a> ce champ  est vide.
@@ -27,14 +27,19 @@
                         <div class="form-group has-success">
                             <input v-model="prenom" class="form-control input-md" placeholder="Prenom" name="prenom" value="" type="text">
                         </div>
-                        
+                        <div v-if="!date" class="alert alert-danger">
+                            <a class="close font-weight-light" data-dismiss="alert" href="#">×</a> ce champ  est vide.
+                        </div>
+                        <div class="form-group has-success">
+                            <input v-model="date" class="form-control input-md" placeholder="date de naissance" name="date" value="" type="date">
+                        </div>
                         <div v-if="!id" class="alert alert-danger">
                             <a class="close font-weight-light" data-dismiss="alert" href="#">×</a> ce champ  est vide.
                         </div>
                         <div class="form-group has-success">
                             <input v-model="id" class="form-control input-md" placeholder="Numéro d'identification" name="id" value="" type="text">
                         </div>
-                        <input class="btn btn-lg btn-info btn-block" value="envoyer le vote" type="submit">
+                        <input class="btn btn-lg btn-info btn-block" value="Envoyer le vote" type="submit">
                     </form>
                 </div>
         </div>
