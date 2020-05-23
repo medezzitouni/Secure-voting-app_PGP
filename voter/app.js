@@ -22,9 +22,8 @@ app.use((req, res, next) => {
 
 
 
-app.use('/admin',express.static(path.join(__dirname, 'public/admins')))
-.use(multer().none()) 
-.use('/admin/', router)
+app.use('/vote',express.static(path.join(__dirname, 'public/')))
+.use(multer().none())
 .use('/vote', router)
 
 

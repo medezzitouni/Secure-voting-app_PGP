@@ -21,6 +21,6 @@ router
 
 // ! getVotes for admin and add vote that are comming from the voter ( Front-end)
 .get('/votes', isAutho, adminCtrls.getVotes)
-.post('/addVote', isAutho, adminCtrls.addVote)
+.post('/addVote', adminCtrls.addVote)
 
 module.exports = router

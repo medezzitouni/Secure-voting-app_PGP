@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {Admin, VoterList, Vote} = require('../models')
+const cipher = require('../cipher')
 
 // ? admins login
 var login = (req, res, next) =>{
@@ -83,25 +84,60 @@ var getVotes = (req, res, next) => {
 }
 
 // ! save a vote come from the voter
-var addVote = (req, res, next)  => {
-    // const url = req.protocol + '://' + req.get('host')
+var addVote = async (req, res, next)  => {
+
     let { voteNumber, bulletin } = req.body
-console.log('addVote here')
-      // ! get his ID form database using firstName and lastName 
-      // ! create and stock the encrypted vote come from the voter to the de and co  
-     // ! stock in the Vote.js
-        let vote = new Vote({
-            voteNumber : voteNumber,
-            bulletin : bulletin
+        
+    //  console.log('this from the voter', voteNumber, bulletin)
+
+     let private_pgp_key    = cipher.config.key_private
+     let server_passphrase = cipher.config.server_passphrase;
+    
+ 
+     try {
+        voteNumber = await cipher.decrypt(private_pgp_key, server_passphrase, voteNumber)
+
+       try {
+            let vote_data = await Vote.findOne({ voteNumber })
+            // let voter_data = await VoterList.findOne({voteNumber})
+            if(vote_data) res.json({ // vote_data || voter_data.haveVoted
+                success: false,
+                error : 'u have already voted'
+            })
+            else{
+                let vote = new Vote({
+                    voteNumber : voteNumber,
+                    bulletin : bulletin
+                })
+
+                await vote.save()
+                
+                res.status(201).json({
+                        success: true,
+                        message: 'vote is saved successfuly, thank u for partipating'
+                        })
+            }
+       } catch (err) {     
+    
+            res.json({
+                    success: true,
+                    error : 'an error has generated, plz can u repeat later'
+                })
+            console.log(`prblm with saving data ${err}`)
+        }
+       
+     } catch (error) {
+        res.json({
+            success: true,
+            error : 'an error has generated, plz can u repeat later'
         })
 
-     vote.save()
-     .then(() => res.status(201).json({
-     message: 'vote is saved successfuly'
-     }))
-     .catch(err => res.status(400).json({
-        error : `prblm with saving data ${err} `
-    }))
+        console.log(`prblm with data decryption ${error}`)
+     }
+     
+     
+
+     
 
 }
 
@@ -152,7 +188,7 @@ var updateVoter = (req, res, next) =>{
            voter.haveVoted = true
            VoterList.updateOne({_id:req.body.voterId},
             voter).then(() => res.status(201).json({
-                message: 'raaak nadddi'
+                voted: true
             }))
             .catch(err => res.status(400).json({
                 error : err
