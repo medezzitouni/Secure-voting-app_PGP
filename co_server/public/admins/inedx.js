@@ -7,7 +7,7 @@ Vue.component('login', {
               <div class="field" style="width:400px">
                 <label class="label">Username</label>
                 <div class="control has-icons-left has-icons-right">
-                <input class="input is-success" v-model="username" type="text" placeholder="Text input" value="bulma">
+                <input class="input is-success" v-model="username" type="text" placeholder="Username" >
                 <span class="icon is-small is-left">
                 <i class="fas fa-user"></i>
                 </span>
@@ -28,7 +28,7 @@ Vue.component('login', {
               </div>
               <div class="field">
                 <p class="control">
-                  <button class="button is-success" @click="sendTitle()">
+                  <button class="button is-success" @click="connect()">
                     Login
                   </button>
                 </p>
@@ -43,7 +43,7 @@ Vue.component('login', {
     };
   },
   methods: {
-    sendTitle(){
+    connect(){
       let f = new FormData()
       f.append('username', this.username)
       f.append('password', this.password)
@@ -102,7 +102,11 @@ Vue.component('vote',
                         <button class="delete" aria-label="close" @click="isActive = false"></button>
                       </header>
                       <section class="modal-card-body">
-                        <p>Vous etes le centre CO, vous pouvez pas accéder au Bulletin</p>
+                        <p>
+                        <span class="has-text-danger">Cette bulletin est crypté car le centre CO ne peut pas accéder au Bulletin:</span>
+                         <br>
+                          {{ vote.bulletin}}
+                        </p>
                       </section>
                       <footer class="modal-card-foot">
                         <button class="button" @click="isActive = false">Cancel</button>
