@@ -103,9 +103,9 @@ Vue.component('vote', {
         console.log(err.msg)
       }
     },
-    async getKeyManager(){
+    async getKeyManager(path){
       try {
-          let res = await axios.get('http://127.0.0.1:3000/api/keymanager')
+          let res = await axios.get(path)
           return res.data.k_public
         } catch (error) {
             console.log("get KeyManager err -> ", error)
@@ -114,9 +114,10 @@ Vue.component('vote', {
     async encryptDataAndSend(voteNumber){
         let scope = this
         
+        var co_pgp_key = await scope.getKeyManager('http://127.0.0.1:3000/api/keymanager');
+        var de_pgp_key = await scope.getKeyManager('http://127.0.0.1:3001/api/keymanager');
 
-        var co_pgp_key = await scope.getKeyManager();
-
+        //! encryption for CO
         kbpgp.KeyManager.import_from_armored_pgp({
           armored: co_pgp_key
         }, function(err,server_km) {
@@ -146,7 +147,49 @@ Vue.component('vote', {
     
               kbpgp.box(params, function(err, encrypt_bulletin, result_buffer) {
                 // console.log('encrypted data', encrypt_voteNumber, encrypt_bulletin)
-                scope.sendVote(encrypt_voteNumber, encrypt_bulletin)
+                scope.sendVoteToCo(encrypt_voteNumber, encrypt_bulletin)
+
+    
+              });
+    
+            });
+
+          });
+
+        });
+
+
+        //! encryption for DE
+        kbpgp.KeyManager.import_from_armored_pgp({
+          armored: de_pgp_key
+        }, function(err,server_km) {
+          if (err) {
+            console.log("de key is not loaded", err);
+            return
+          }
+          let params = {
+            msg: voteNumber,
+            encrypt_for: server_km
+        }
+
+          kbpgp.box(params, function(err, result_string, result_buffer) {
+            let encrypt_voteNumber = result_string
+
+            kbpgp.KeyManager.import_from_armored_pgp({
+              armored: de_pgp_key
+            }, function(err,server_km) {
+              if (err) {
+                console.log("de key is not loaded2", err);
+                return
+              }
+              let params = {
+                msg:       scope.CandidatSelected,
+                encrypt_for: server_km
+            }
+    
+              kbpgp.box(params, function(err, encrypt_bulletin, result_buffer) {
+                // console.log('encrypted data', encrypt_voteNumber, encrypt_bulletin)
+                scope.sendVoteToDe(encrypt_voteNumber, encrypt_bulletin)
 
     
               });
@@ -157,9 +200,23 @@ Vue.component('vote', {
 
         });
         
+        
     },
-
-    async sendVote(voteNumber, bulletin){
+    async sendVoteToDe(voteNumber, bulletin){
+      if(voteNumber && bulletin){
+        let f = new FormData()
+        f.append('voteNumber', voteNumber)
+        f.append('bulletin', bulletin)
+        try {
+          
+         let resDo = await axios.post('http://127.0.0.1:3001/admin/addVote', f)
+         console.log('resDO -> ', resDo.data.done, "mes ->", resDo.data.msg)
+        } catch (error) {
+          console.log("from DE -> ", error)
+        }
+      }
+    },
+    async sendVoteToCo(voteNumber, bulletin){
       this.clear()
 
       if(voteNumber && bulletin){
@@ -169,13 +226,14 @@ Vue.component('vote', {
  
        try {
          let res = await axios.post('http://127.0.0.1:3000/admin/addVote', f)
-         
          if(res.data.success) this.success_message = res.data.message
          else this.fail_message = res.data.error
+
          this.message_available = true
+
          
        } catch (err) {
-         console.log("voter to CO -> " + err)
+         console.log("from CO -> ", err)
        }
       }else{
           this.fail_message = 'an error has generated, plz can u repeat again'

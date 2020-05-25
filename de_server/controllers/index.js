@@ -1,6 +1,13 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {Admin, Vote, CountedVote} = require('../models')
+const cipher = require('../cipher')
+
+
+
+// ! create the keys
+// cipher.generateKeyManager().then(_ => { console.log("KeyManager generated")})
+
 
 // ? admins login
 var login = (req, res, next) =>{
@@ -84,24 +91,64 @@ var getVotes = (req, res, next) => {
 }
 
 // ! this is gonna serve the front-end
-var addVote = (req, res, next)  => {
-    // const url = req.protocol + '://' + req.get('host')
+var addVote = async (req, res, next)  => {
+   
     let { voteNumber, bulletin } = req.body
+        
+    //  console.log('this from the voter', voteNumber, bulletin)
 
-      // ! create and stock the encrypted vote come from the voter to the de and co  
-     // ! stock in the Vote.js
-        let vote = new Vote({
-            voteNumber : voteNumber,
-            bulletin : bulletin
+     let private_pgp_key    = cipher.config.key_private
+     let server_passphrase = cipher.config.server_passphrase;
+    // console.log(private_pgp_key)
+ 
+     try {  
+
+        voteNumber = await cipher.decrypt(private_pgp_key, server_passphrase, voteNumber)
+        bulletin = await cipher.decrypt(private_pgp_key, server_passphrase, bulletin)
+        // console.log('decrypted data -> ', voteNumber, bulletin)
+
+
+       try {
+            let vote_data = await Vote.findOne({ voteNumber })
+
+            // let voter_data = await VoterList.findOne({voteNumber})
+            if(vote_data) res.json({ // vote_data || voter_data.haveVoted
+                done: false,
+                msg : 'u have already voted'
+            })
+            else{
+                let vote = new Vote({
+                    voteNumber : voteNumber,
+                    bulletin : bulletin
+                })
+
+                await vote.save()
+              
+                res.json({
+                    done: true,
+                    msg:'vote is saved successfuly, thank u for partipating'
+                })
+
+            }
+       } catch (err) {     
+    
+            res.json({
+                done: false,
+                msg:'saving or updating data'
+            })
+            console.log(`prblm with saving or updating data ${err}`)
+        }
+       
+     } catch (error) {
+        res.json({
+            done: false,
+            msg: "data decryption"
+            
         })
 
-     vote.save()
-     .then(() => res.status(201).json({
-     message: 'vote is saved successfuly'
-     }))
-     .catch(err => res.status(400).json({
-        error : `prblm with saving data ${err} `
-    }))
+        console.log(`prblm with data decryption ${error}`)
+     }
+     
 
 }
 
@@ -122,47 +169,124 @@ var getCountedVotes = (req, res, next) => {
     // res.status(200).json(data)
 }
 
-var addCountedVote = (req, res, next)  => {
+var addCountedVote = async (req, res, next)  => {
 
-        let { voteNumber, bulletin } = req.body
 
-        // ! create and stock the encrypted vote come from the CO   
-         // ! stock in the CountedVote.js
-        let countedVote = new CountedVote({
-            voteNumber : voteNumber,
-            bulletin : bulletin
+    let { voteNumber, bulletin, isCounted } = req.query
+        
+    //  console.log('this from the co', req.query.name)
+    //     res.json({
+    //         done: true,
+    //         name : req.query.name
+    //     })
+
+     let private_pgp_key    = cipher.config.key_private
+     let server_passphrase = cipher.config.server_passphrase;
+    console.log("comming from CO", private_pgp_key)
+ 
+     try {  
+
+        voteNumber = await cipher.decrypt(private_pgp_key, server_passphrase, voteNumber)
+        bulletin = await cipher.decrypt(private_pgp_key, server_passphrase, bulletin)
+        console.log('decrypted data -> ', voteNumber, bulletin)
+
+       try {
+            let vote_data = await CountedVote.findOne({ voteNumber })
+
+            // let voter_data = await VoterList.findOne({voteNumber})
+            if(vote_data) res.json({ // vote_data || voter_data.haveVoted
+                done: false,
+                msg : 'u have already voted'
+            })
+            else{
+                let countedVote = new CountedVote({
+                            voteNumber : voteNumber,
+                            bulletin : bulletin,
+                            isCounted: isCounted
+                        })
+                await countedVote.save()
+              
+                res.json({
+                    done: true,
+                    msg:'vote is saved successfuly, thank u for partipating'
+                })
+
+            }
+       } catch (err) {     
+    
+            res.json({
+                done: false,
+                msg:'saving or updating data'
+            })
+            console.log(`prblm with saving or updating data ${err}`)
+        }
+       
+     } catch (error) {
+        res.json({
+            done: false,
+            msg: "data decryption"
+            
         })
 
-    countedVote.save()
-    .then(() => res.status(201).json({
-    message: 'vote is saved successfuly'
-    }))
-    .catch(err => res.status(400).json({
-        error : `prblm with saving data ${err}`
-    }))
+        console.log(`prblm with data decryption ${error}`)
+     }
+     
 }
 
-var updateCountedVote = (req, res, next) =>{
-    CountedVote.findOne({_id: req.body.voteId})
-    .then(vote =>{
-        if(!vote)
-           return res.status(401).json({
-               error: new Error('Vote not found!'),
-               msg:'vote not found!'
-           })
+var updateVote = async (req, res, next) =>{
 
-           vote.isValid = true
-           CountedVote.updateOne({_id:req.body.voteId},
-            vote).then(() => res.status(201).json({
-                valid: true
-            }))
-            .catch(err => res.status(400).json({
-                error : err
-            }))
-    })
-    .catch(err => res.status(500).json({
-        error : 'findOneError: ' + err
-    }))
+    console.log('vote Id -> ', req.body.voteId)
+
+    try {
+        
+       let vote = await Vote.findOne({_id: req.body.voteId})
+       if(!vote)
+              return res.json({
+                  success : false,
+                  error:'vote not found!'
+              })
+        let voteCounted = await CountedVote.findOne({ voteNumber:vote.voteNumber })
+
+        if(voteCounted && voteCounted.isCounted){
+            vote.isValid = true
+
+            await Vote.updateOne({_id:vote._id}, vote)
+            res.status(201).json({
+                success: true,
+                msg: "the vote is valid now"
+            })
+        }
+        else res.json({
+            success: false,
+            error: 'The vote is not counted by the CO, thank to try later'
+        })
+        
+    } catch (error) {
+        res.status(201).json({
+            success: false,
+            error : "update prblm : " + error
+        })
+    }
+
+    // .then(vote =>{
+    //     if(!vote)
+    //        return res.status(401).json({
+    //            error: new Error('Vote not found!'),
+    //            msg:'vote not found!'
+    //        })
+
+    //        vote.isValid = true
+    //        CountedVote.updateOne({_id:req.body.voteId},
+    //         vote).then(() => res.status(201).json({
+    //             valid: true
+    //         }))
+    //         .catch(err => res.status(400).json({
+    //             error : err
+    //         }))
+    // })
+    // .catch(err => res.status(500).json({
+    //     error : 'findOneError: ' + err
+    // }))
 }
 
 
@@ -172,10 +296,10 @@ module.exports.adminCtrls = {
 
     getVotes,
     addVote,
+    updateVote,
     
     getCountedVotes,
-    addCountedVote,
-    updateCountedVote
+    addCountedVote
 
 }
 

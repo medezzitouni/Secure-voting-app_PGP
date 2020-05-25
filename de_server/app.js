@@ -4,7 +4,7 @@ const path = require('path')
 const multer = require('multer')
 const connect = require('./db/connection')
 const router = require('./routes')
-
+const cipher = require('./cipher')
 
 const app = express()
 
@@ -25,6 +25,13 @@ app.use((req, res, next) => {
 app.use('/admin',express.static(path.join(__dirname, 'public/admins')))
 .use(multer().none()) 
 .use('/admin/', router)
+.get('/api/keymanager', (req, res) =>{
+  res.json({
+      k_public: cipher.config.key_public,
+      msg:'this is the key public'
+  })
+
+})
 
 
 

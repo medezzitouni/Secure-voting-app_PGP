@@ -69,12 +69,25 @@ Vue.component('vote',
     },
     data() {
       return {
-        isActive: false
+        isActive: false,
+        error : null
       }
     },
     template: `
       <div>
-          <div style="text-align: center;font-weight: bold; font-size:18px">VOTES LIST</div>
+              <article class="message" :class="error ? 'is-danger' : 'is-info'" style="  margin:30px ">
+                  <div class="message-header" style="display: grid; justify-content:center; align-items: center; height:40px ">
+                    <p v-if="!error" style="font-size: 18px">Information</p>
+                    <p v-if="error" >{{ error }}</p>
+                  </div>
+                  <div v-show="!error" class="message-body">
+                      If the vote exist in the Counted List (counted by CO center ), click on the validation button of the vote<br>
+                      to validate it, don't worry we do check if the vote is really counted or not after you click on the button<br>
+                      then if it's really counted we make it valid, or if it's not we generate an error
+                  </div>
+            </article>
+
+          <div style="text-align: center;font-weight: bold; font-size:18px">VOTES LIST from Voter</div>
           <div class="table-responsive">
              <table class="table table-hover ">
                 <thead class="thead-dark">
@@ -82,15 +95,19 @@ Vue.component('vote',
                   <th scope="col">Database ID</th>
                   <th scope="col">Vote Number</th>
                   <th scope="col">Bulletin</th>
-                  <th scope="col">IsCounted by the CO</th>
+                   <th scope="col"> Validation </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr  v-for="vote in votes">
+                  <tr  v-for="(vote, index) in votes">
                   <th scope="row">{{ vote._id }}</th>
                   <td>{{ vote.voteNumber }}</td>
                   <td ><button class="button is-danger" @click="isActive = true">Show Bulletin</button></td>
-                  <td>{{ vote.isCounted }}</td>
+                  <td>
+                    <button 
+                    class="button " :class="vote.isValid ? 'is-success' : 'is-danger'"  
+                    v-text="vote.isValid ? 'YES': 'NO'" @click="setValid(vote._id, index)" ></button></td>
+                  </td>
           
                   <div class="modal" :class="isActive ? 'is-active' : ''">
                     <div class="modal-background"></div>
@@ -122,7 +139,28 @@ Vue.component('vote',
     {
       // console.log("helllo")
       // console.table(this.votersList)
+    },
+    methods: {
+      async setValid(_id, index){
+        
+        // ! send axios to updateCountedVote
+        let f = new FormData()
+        f.append('voteId', _id)
+        
+        try {
+              let res = await axios.put('/admin/updateVote', f)
+
+              if(res.data.success == true)  this.votes[index].isValid = true
+              else {
+                this.error = res.data.error
+                console.log(res.data.error)
+              }
+            
+        } catch (error) {
+          console.log('validation error ->', error)
+        }
     }
+    },
    }
 )
 
@@ -138,7 +176,7 @@ Vue.component('countedVote',
     },
     template: `
       <div>
-          <div style="text-align: center;font-weight: bold; font-size:18px">Counted VOTES LIST</div>
+          <div style="text-align: center;font-weight: bold; font-size:18px">Counted VOTES LIST from CO Center</div>
           <div class="table-responsive">
              <table class="table table-hover ">
                 <thead class="thead-dark">
@@ -146,7 +184,7 @@ Vue.component('countedVote',
                   <th scope="col">Database ID</th>
                   <th scope="col">Vote Number</th>
                   <th scope="col">Bulletin</th>
-                  <th scope="col">IsValid by the CO</th>
+                  <th scope="col">Counted By CO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -155,8 +193,10 @@ Vue.component('countedVote',
                   <td>{{ vote.voteNumber }}</td>
                   <td ><button class="button is-danger" @click="isActive = true">Show Bulletin</button></td>
                   <td>
-                     <button v-if="vote.isValid"  class="button is-success" disabled >Valid</button>
-                     <button v-if="!vote.isValid"  class="button is-danger" @click="setValid(vote._id, index)">Not yet</button>
+                    <!-- <button v-if="vote.isValid"  class="button is-success" disabled >Valid</button> -->
+                     <button  class="button " 
+                     :class="vote.isCounted ? 'is-success' : 'is-danger'" 
+                     @click="setValid(vote._id, index)" v-text=" vote.isCounted ? 'YES' : 'Not Yet' " disabled></button>
                   </td> 
           
                   <div class="modal" :class="isActive ? 'is-active' : ''">
@@ -191,17 +231,7 @@ Vue.component('countedVote',
       console.table(this.votersList)
     },
     methods: {
-      setValid(_id, index){
-        
-          // ! send axios to updateCountedVote
-          let f = new FormData()
-          f.append('voteId', _id)
-          axios.put('/admin/updateCountedVote', f).then(res => {
-            if(res.data.valid === true)  this.countedvotes[index].isValid = true
-            else console.log("err -> ", res.data)
-          })
-          .catch(err => console.log(err))
-      }
+   
     },
    }
 )

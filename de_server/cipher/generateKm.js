@@ -16,7 +16,7 @@ const generateKeyManager = function (){
                   
       
                 charlie.export_pgp_private ({
-                  passphrase: 'booyeah!'
+                  passphrase: 'khoyaah!'
                 }, function(err, pgp_private) {
                     //* dispay the private key
       

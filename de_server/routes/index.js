@@ -13,11 +13,11 @@ router
 
 // ! getVotes for admin and add vote that are comming from the voter ( Front-end)
 .get('/votes', isAutho, adminCtrls.getVotes)
-.post('/addVote', isAutho, adminCtrls.addVote)
+.post('/addVote', adminCtrls.addVote)
+.put('/updateVote', isAutho, adminCtrls.updateVote) // ! set the isValid value to true, it means the vote is valid
 
 
 .get('/countedVotes', isAutho, adminCtrls.getCountedVotes)
-.post('/addCountedVote', isAutho,adminCtrls.addCountedVote)
-.put('/updateCountedVote', isAutho, adminCtrls.updateCountedVote) // ! set the isValid value to true, it means the vote is valid
+.get('/addCountedVote', adminCtrls.addCountedVote)
 
 module.exports = router
