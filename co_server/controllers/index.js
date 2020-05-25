@@ -2,6 +2,9 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {Admin, VoterList, Vote} = require('../models')
 const cipher = require('../cipher')
+const axios = require('axios')
+const kbpgp = require('kbpgp')
+const FormData = require('form-data')
 
 // ? admins login
 var login = (req, res, next) =>{
@@ -92,6 +95,8 @@ var addVote = async (req, res, next)  => {
 
      let private_pgp_key    = cipher.config.key_private
      let server_passphrase = cipher.config.server_passphrase;
+    // console.log(private_pgp_key)
+
     
  
      try {
@@ -107,15 +112,27 @@ var addVote = async (req, res, next)  => {
             else{
                 let vote = new Vote({
                     voteNumber : voteNumber,
-                    bulletin : bulletin
+                    bulletin : bulletin,
+                    isCounted:true
                 })
 
                 await vote.save()
                 
+               let voter = await VoterList.findOne({ voteNumber })
+               if(voter){
+                    voter.haveVoted = true
+                    await VoterList.updateOne({ _id: voter._id}, voter)
+                }else{
+                    console.log("there is no voter has that name")
+                }
+                bulletin = await cipher.decrypt(private_pgp_key, server_passphrase, bulletin)
+                await sendVoteToDe(voteNumber, bulletin, true)
+
                 res.status(201).json({
                         success: true,
                         message: 'vote is saved successfuly, thank u for partipating'
                         })
+
             }
        } catch (err) {     
     
@@ -123,7 +140,7 @@ var addVote = async (req, res, next)  => {
                     success: true,
                     error : 'an error has generated, plz can u repeat later'
                 })
-            console.log(`prblm with saving data ${err}`)
+            console.log(`prblm with saving or updating data ${err}`)
         }
        
      } catch (error) {
@@ -136,7 +153,7 @@ var addVote = async (req, res, next)  => {
      }
      
      
-
+    //  console.log('MINE -> ', voteNumber)
      
 
 }
@@ -198,6 +215,73 @@ var updateVoter = (req, res, next) =>{
     .catch(err => res.status(500).json({
         error : 'findOneError: ' + err
     }))
+}
+
+
+var getDEPublicKey = async function(path){
+        let res = await axios.get(path)
+        return res.data.k_public
+
+}
+
+var sendVoteToDe = async function(voteNumber, bulletin, isCounted){
+
+    let de_pgp_key = await getDEPublicKey('http://127.0.0.1:3001/api/keymanager')
+    console.log('from sendVoteToDe -> ', de_pgp_key)
+
+    kbpgp.KeyManager.import_from_armored_pgp({
+        armored: de_pgp_key
+      }, function(err,server_km) {
+        if (err) {
+          console.log("co key is not loaded", err);
+          return
+        }
+        let params = {
+          msg: voteNumber,
+          encrypt_for: server_km
+      }
+
+        kbpgp.box(params, function(err, result_string, result_buffer) {
+          let encrypt_voteNumber = result_string
+
+          kbpgp.KeyManager.import_from_armored_pgp({
+            armored: de_pgp_key
+          }, function(err,server_km) {
+            if (err) {
+              console.log("co key is not loaded2", err);
+              return
+            }
+            let params = {
+              msg:       bulletin,
+              encrypt_for: server_km
+          }
+  
+            kbpgp.box(params, async function(err, encrypt_bulletin, result_buffer) {
+              // console.log('encrypted data', encrypt_voteNumber, encrypt_bulletin)
+            //   let f = new FormData()
+            //   f.append('voteNumber', encrypt_voteNumber)
+            //   f.append('bulletin', encrypt_bulletin)
+              try {
+                  
+                  let res = await axios.get('http://127.0.0.1:3001/admin/addCountedVote',{
+                      params : {
+                          voteNumber : encrypt_voteNumber,
+                          bulletin: encrypt_bulletin,
+                          isCounted: isCounted
+                      }
+                  }) 
+                    console.log('result from DE', res.data.done, res.data.name)
+              } catch (error) {
+                  console.log('type error here -> ', error)
+              }
+  
+            });
+  
+          });
+
+        });
+
+      });
 }
 
 

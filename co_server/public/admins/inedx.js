@@ -84,7 +84,7 @@ Vue.component('vote',
                   <th scope="col">Database ID</th>
                   <th scope="col">Vote Number</th>
                   <th scope="col">Bulletin</th>
-                 <!-- <th scope="col">IsCounted by the CO</th> -->
+                  <th scope="col">IsCounted by the CO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -92,7 +92,11 @@ Vue.component('vote',
                   <th scope="row">{{ vote._id }}</th>
                   <td>{{ vote.voteNumber }}</td>
                   <td ><button class="button is-danger" @click="isActive = true">Show Bulletin</button></td>
-                 <!-- <td>{{ vote.isCounted }}</td> -->
+                  <td>
+                  <button  class="button " 
+                  :class="vote.isCounted ? 'is-success' : 'is-danger'"
+                  disabled v-text="vote.isCounted ? 'YES' : 'Not Yet'" ></button>
+                  </td> 
           
                   <div class="modal" :class="isActive ? 'is-active' : ''">
                     <div class="modal-background"></div>
@@ -143,7 +147,7 @@ Vue.component('voters',
     template: `
 
       <div>
-          <div style="text-align: center;font-weight: bold; font-size:18px">VOTERS LIST</div>
+          <div style="text-align: center;font-weight: bold; font-size:18px">EMPLOYEES LIST</div>
           <div class="table-responsive">
              <table class="table table-hover ">
                 <thead class="thead-dark">
@@ -165,7 +169,7 @@ Vue.component('voters',
                       <td>{{ voter.voteNumber }}</td>
                       <td>
                          <button v-if="voter.haveVoted"  class="button is-success" disabled >Voted</button>
-                         <button v-if="!voter.haveVoted"  class="button is-danger" @click="setVoted(voter._id, index)">Not yet</button>
+                         <button v-if="!voter.haveVoted"  class="button is-danger" @click="setVoted(voter._id, index)" disabled>Not yet</button>
                       </td>      
                   </tr>
                   

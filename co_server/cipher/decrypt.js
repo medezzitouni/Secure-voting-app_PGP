@@ -20,8 +20,8 @@ var decrypt = function(server_pgp_key, server_passphrase, data){
                   if (err != null) {
                     reject(err)
                   } else {
-                    console.log("decrypted message");
-                    console.log("[0] -> " , literals[0].toString());
+                    // console.log("decrypted message");
+                    // console.log("[0] -> " , literals[0].toString());
                     resolve(literals[0].toString())
 
                     //! the following is for signer if there is a signer
