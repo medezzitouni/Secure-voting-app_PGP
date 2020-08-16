@@ -258,7 +258,7 @@ var updateVote = async (req, res, next) =>{
         }
         else res.json({
             success: false,
-            error: 'The vote is not counted by the CO, thank to try later'
+            error: 'The vote is not counted by the CO, thanks to try later'
         })
         
     } catch (error) {
