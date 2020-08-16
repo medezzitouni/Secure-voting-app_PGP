@@ -203,7 +203,7 @@ Vue.component('countedVote',
                     <div class="modal-background"></div>
                     <div class="modal-card">
                       <header class="modal-card-head">
-                        <p class="modal-card-title">Vote Bulletin</p>
+                        <p class="modal-card-title">Vote Bulletin counted by the Co Center</p>
                         <button class="delete" aria-label="close" @click="isActive = false"></button>
                       </header>
                       <section class="modal-card-body">
