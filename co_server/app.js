@@ -16,13 +16,13 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     next();
-  });
+});
 
- connect()
+connect()
 
 
 
-app.use('/admin',express.static(path.join(__dirname, 'public/admins')))
+app.use('/',express.static(path.join(__dirname, 'public/admins')))
 .use(multer().none()) 
 .use('/admin/', router)
 //! give public key 
@@ -33,7 +33,5 @@ app.use('/admin',express.static(path.join(__dirname, 'public/admins')))
   })
 
 })
-
-
 
 module.exports = app
